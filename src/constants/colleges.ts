@@ -3,13 +3,13 @@ import { CollegeRecord } from '../types';
 export const COLLEGES: Record<string, CollegeRecord> = {
   northwood: {
     id: 'northwood',
-    name: 'Northwood Institute of Technology (Fictional Demo College)',
-    shortName: 'Northwood Tech',
+    name: 'Northwood Institute of Technology (Fictional Demo — Sample Flow Only)',
+    shortName: 'Northwood Tech (Demo)',
     isSynthetic: true,
     isSupported: true,
     routeTitle: 'Northwood Student Accounts Self-Service (Demo Ledger)',
     routeDescription:
-      'Fictional Northwood Tech finance portal where student tuition, lab assessments, and term dues are officially simulated.',
+      'Fictional Northwood Tech finance portal where student tuition, lab assessments, and term dues are officially simulated for demonstration.',
     sourceLabel: 'Fictional demo data',
     verificationSteps: [
       'Open Northwood’s fictional demo ledger using the in-app tool below.',
@@ -25,18 +25,18 @@ export const COLLEGES: Record<string, CollegeRecord> = {
     isSupported: true,
     routeTitle: 'IIT Delhi eCampus Student Corner (scorner)',
     routeDescription:
-      'Official IIT Delhi portal for continuing students to inspect registered courses, semester fee details, and institutional dues breakdown before taking any payment action.',
+      'IIT Delhi’s 2026–27 first-semester circular directs continuing students to eCampus Student Corner for the semester fees covered by that circular.',
     portalUrl: 'https://ecampus.iitd.ac.in/scorner/login',
     portalHostname: 'ecampus.iitd.ac.in',
-    guidanceUrl: 'https://academics.iitd.ac.in/circulars/',
-    sourceLabel: 'IIT Delhi Academic Circulars (Continuing Students Fee Guidance, Academics Division)',
+    guidanceUrl:
+      'https://academics.iitd.ac.in/wp-content/uploads/2026/07/FEE-CIRCULAR-FOR-CONTINUING-STUDENTS-FOR-THE-1ST-SEMESTER-OF-ACADEMIC-YEAR-2026-27-SHEKHARTHAK170620-updated_compressed.pdf',
+    sourceLabel: 'IIT Delhi 2026–27 First-Semester Fee Circular for Continuing Students (academics.iitd.ac.in)',
     lastCheckedDate: '2026-11-22',
     verificationSteps: [
-      'Open https://ecampus.iitd.ac.in/scorner/login directly in your browser or access via your existing institutional bookmark.',
-      'Log in through IIT Delhi institutional Single Sign-On credentials. Never enter passwords or OTPs into external forms or emailed links.',
-      'Navigate to your student dashboard to review your current semester fee details, itemized breakdown, and registered balance before taking any payment action.',
-      'Verify whether any pending fee appears on your official eCampus record before initiating any payment transaction.',
-      'If you have doubts regarding a fee notice, verify with the Academic Section using contact details listed on academics.iitd.ac.in.'
+      'Open https://ecampus.iitd.ac.in/scorner/login directly in your browser or through your verified student bookmark.',
+      'Log in with your official Kerberos / institutional credentials. Never enter credentials or OTPs into external links.',
+      'Check your semester fee details and itemized breakdown on your eCampus dashboard before taking any payment step.',
+      'If a charge is missing, differs, or you have questions, verify with the Academic Section using contacts published on academics.iitd.ac.in before transferring funds.'
     ]
   },
   uc_berkeley: {
@@ -64,17 +64,17 @@ export const COLLEGES: Record<string, CollegeRecord> = {
   unsupported: {
     id: 'unsupported',
     name: 'My college is not listed / Other institution',
-    shortName: 'Unsupported College',
+    shortName: 'Unlisted College',
     isSynthetic: false,
     isSupported: false,
-    routeTitle: 'Direct Institution Portal / Accounts Office Directory',
+    routeTitle: 'Official Student Portal / Accounts Office Directory',
     routeDescription:
-      'FeePause does not maintain a pre-verified directory route for unlisted institutions. Verify fee notices directly through your university’s official registrar or student accounts office without clicking links from unexpected messages.',
+      'FeePause does not pre-register this institution. Verify unexpected fee notices directly through an authenticated student portal you already use or your campus accounts office.',
     verificationSteps: [
       'Open your college student portal using an existing trusted bookmark or your browser history.',
-      'If you do not have a bookmark, search for your institution’s official registrar or student accounts office by institution name.',
-      'Log in securely through your institution’s authenticated portal and check your student billing statement or ledger balance.',
-      'Never use contact details, phone numbers, or payment links provided inside an unverified message to verify a fee.'
+      'If you do not have a bookmark, search for your institution’s official registrar or student accounts office via its official domain.',
+      'Log in securely through your institution’s authenticated portal and inspect your student billing statement or ledger balance.',
+      'Never guess a domain or reuse contact details, phone numbers, or payment links provided inside the message.'
     ]
   }
 };

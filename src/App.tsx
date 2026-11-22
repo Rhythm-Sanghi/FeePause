@@ -66,6 +66,19 @@ export const App: React.FC = () => {
     }
   }, []);
 
+  const handleUseOwnMessage = useCallback(() => {
+    setActiveSampleId(null);
+    // Switch away from fictional Northwood if currently selected; never silently route personal messages to Northwood
+    if (selectedCollegeId === 'northwood') {
+      setSelectedCollegeId('unsupported');
+    }
+    // Text already typed is strictly preserved
+    const collegeSelect = document.getElementById('college-select') as HTMLSelectElement | null;
+    if (collegeSelect) {
+      collegeSelect.focus();
+    }
+  }, [selectedCollegeId]);
+
   const handleClear = useCallback(() => {
     setInputText('');
     setHasChecked(false);
@@ -112,37 +125,6 @@ export const App: React.FC = () => {
     <div className="app-container">
       <Header />
 
-      {/* Top Quick-Demo Bar for Instant 1-Click Judge Access (Within Easy Reach on Mobile) */}
-      <div className="quick-demo-strip" role="region" aria-label="Quick Judge Demos">
-        <span className="quick-demo-label">Judge Quick Start:</span>
-        <div className="quick-demo-buttons">
-          <button
-            type="button"
-            className="btn-quick-routine"
-            onClick={() => handleSelectSample(SAMPLE_REQUESTS[1])}
-            id="btn-quick-routine-top"
-          >
-            ★ Try the routine reminder
-          </button>
-          <button
-            type="button"
-            className="btn-quick-sample"
-            onClick={() => handleSelectSample(SAMPLE_REQUESTS[0])}
-            id="btn-quick-urgent-top"
-          >
-            Urgent notice
-          </button>
-          <button
-            type="button"
-            className="btn-quick-sample"
-            onClick={() => handleSelectSample(SAMPLE_REQUESTS[2])}
-            id="btn-quick-unlisted-top"
-          >
-            Unlisted college
-          </button>
-        </div>
-      </div>
-
       {/* Verification Action Banner: Highest Visual Hierarchy */}
       <VerificationBanner
         college={currentCollege}
@@ -161,6 +143,7 @@ export const App: React.FC = () => {
             onCheckRequest={handleCheck}
             onClear={handleClear}
             onSelectSample={handleSelectSample}
+            onUseOwnMessage={handleUseOwnMessage}
             activeSampleId={activeSampleId}
           />
 

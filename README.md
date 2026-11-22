@@ -17,7 +17,7 @@ College students are frequent targets of fraudulent or unauthorized fee communic
 This reality is documented by university advisories and billing guidance:
 - **University Fee Fraud Advisories:** UC Berkeley warns students about fake tuition payment requests and unexpected messages claiming there is a problem with their registration or student account. See [UC Berkeley Information Security Office: Back-to-School Cybersecurity Tips](https://security.berkeley.edu/back-school-cybersecurity-tips).
 - **Where Students Check Authentic Charges:** Official first-party billing instructions—such as [UC Berkeley Student Central: Understanding Your Student Bill](https://studentcentral.berkeley.edu/billing-fees-payments/billing/)—direct students to log into **CalCentral (`calcentral.berkeley.edu`)** and inspect **My Finances → Billing Summary → View Transactions** to confirm authentic institutional charges before making any payment.
-- **Continuing Student Fee Guidelines:** Official university circulars—such as the [IIT Delhi Academic Circulars](https://academics.iitd.ac.in/circulars/)—advise students that all authentic semester registration fees, hostel assessments, and balance breakdowns are posted exclusively within the authenticated **eCampus Student Corner (`ecampus.iitd.ac.in/scorner/login`)**, cautioning against unverified payment links.
+- **Continuing Student Fee Guidelines:** IIT Delhi’s 2026–27 first-semester circular directs continuing students to eCampus Student Corner for the semester fees covered by that circular. See the [IIT Delhi 2026–27 First-Semester Fee Circular](https://academics.iitd.ac.in/wp-content/uploads/2026/07/FEE-CIRCULAR-FOR-CONTINUING-STUDENTS-FOR-THE-1ST-SEMESTER-OF-ACADEMIC-YEAR-2026-27-SHEKHARTHAK170620-updated_compressed.pdf) published under [IIT Delhi Academic Circulars](https://academics.iitd.ac.in/circulars/).
 
 Existing security tools often try to predict "scam probabilities" or award false-sense-of-security "safe to pay" badges using probabilistic AI text models. But phishing messages can look pristine, and genuine university emails can look rushed or unpolished. **Text in an incoming message can never prove whether an invoice actually exists on an institutional ledger.**
 
@@ -27,18 +27,18 @@ FeePause operates on a foundational safety premise: **Never guess authenticity. 
 
 ## 30-Second Judge Walkthrough
 
-1. **One-Click Demo Entry:** Click **"★ Try the routine reminder"** in the top quick-demo bar or workspace.
+1. **One-Click Demo Entry:** Click **"★ Try the routine reminder"** in the unified entry strip (or click **"Use my own message ✍️"** to check your own fee notice with real college verification).
 2. **Review Extracted Observations:** FeePause deterministically detects observable facts—such as claimed amounts (supporting Indian-grouped `₹1,25,000`, Western-grouped `$1,250,000`, and plain sums), stated deadlines, external links, and credential mentions.
 3. **Inspect Evidence:** Selecting an observation in the workspace updates the **Evidence Inspector** with the exact excerpt, plain-language risk assessment, and why message content alone cannot prove an institutional balance.
-4. **Primary Safety Action:** Look at the top banner. FeePause gives highest visual hierarchy to the independent verification route. Sender-supplied links and handles are strictly isolated and prevented from supplying destinations.
+4. **Primary Safety Action & Checklist:** Look at the top banner. FeePause gives highest visual hierarchy to the independent verification route with an embedded 3-step checklist (1. check description/line item, 2. check amount, 3. check academic term/due date) and explicit next steps.
 5. **Open Demo Ledger:** Click **"Open demo ledger →"** to inspect fictional Northwood Tech's simulated accounts ledger:
    - **For the Routine Reminder:** Displays three compact rows:
      1. *What the message claims:* Campus Library Materials Assessment of $42.50.
      2. *What the demo ledger shows:* **Matching charge in this demo ledger** ($42.50 pending balance).
      3. *What remains unverified:* **Reminder Status: The incoming reminder itself remains unverified.** Even with a matching charge, students must pay exclusively through authenticated portal cashier instructions, never through links in the message.
-   - **For the Urgent Notice:** Click **"Sample 1: Urgent Overdue Notice"**. The demo ledger displays three compact rows with **"No corresponding charge shown"** and explains that a missing entry calls for follow-up with the accounts office.
+   - **For the Urgent Notice:** Click **"Urgent notice"**. The demo ledger displays three compact rows with **"No corresponding charge shown"** and explains that a missing entry calls for follow-up with the accounts office.
    - **For Custom / Edited Text:** Displays **"No demo result for this message"** while keeping the college verification route available. Fictional sample results are never inherited by arbitrary user input.
-6. **Try Custom Text:** Paste any message text. Notice that editing text immediately clears previous findings and displays **"Message changed. Check again."** while keeping the institutional verification banner active.
+6. **Try Custom Text:** Click **"Use my own message ✍️"** or paste text. Northwood is scoped to demo samples, routing personal checks to authentic college portals or unlisted protocols. Notice that editing text immediately clears previous findings and displays **"Message changed. Check again."** while keeping the institutional verification banner active.
 
 ---
 
@@ -92,13 +92,13 @@ npm run build
 ```bash
 npm run test
 ```
-*Runs 17 unit tests across 3 suites validating deterministic extraction (Indian digit grouping, Western grouping, credentials vs. neutral mentions, neutral links vs. payment routes, stated deadlines), destination isolation invariants, privacy boundaries, and fictional college metadata constraints.*
+*Runs 29 unit tests across 3 suites validating deterministic extraction (Indian digit grouping, Western grouping, credentials vs. neutral mentions, neutral links vs. payment routes, stated deadlines), destination isolation invariants, privacy boundaries, fictional college metadata constraints, and all 12 accuracy regression cases.*
 
 ### 5. Run End-to-End & Functional Tests (Playwright)
 ```bash
 npm run test:e2e
 ```
-*Runs 14 Playwright tests covering judge sample flows, three compact comparison rows, keyboard accessibility & focus restoration, stale state warnings ("Message changed. Check again."), real-college portal links (IIT Delhi & UC Berkeley), unlisted college fallback, zero storage/network marker leak audits, and screenshot capture.*
+*Runs 18 Playwright tests covering judge sample flows, three compact comparison rows, single visible routine entry strip, personal-message entry point, real-college verification checklist, keyboard accessibility & focus restoration, stale state warnings ("Message changed. Check again."), real-college portal links (IIT Delhi & UC Berkeley), unlisted college fallback, zero storage/network marker leak audits, and screenshot capture.*
 
 ### 6. Start Local Development Server
 ```bash

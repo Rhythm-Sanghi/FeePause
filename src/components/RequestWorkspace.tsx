@@ -1,6 +1,5 @@
 import React from 'react';
 import { SAMPLE_REQUESTS } from '../constants/samples';
-import { COLLEGES } from '../constants/colleges';
 import { SampleRequest } from '../types';
 
 interface RequestWorkspaceProps {
@@ -11,6 +10,7 @@ interface RequestWorkspaceProps {
   onCheckRequest: () => void;
   onClear: () => void;
   onSelectSample: (sample: SampleRequest) => void;
+  onUseOwnMessage: () => void;
   activeSampleId: string | null;
 }
 
@@ -22,8 +22,11 @@ export const RequestWorkspace: React.FC<RequestWorkspaceProps> = ({
   onCheckRequest,
   onClear,
   onSelectSample,
+  onUseOwnMessage,
   activeSampleId
 }) => {
+  const isPersonalMode = activeSampleId === null;
+
   return (
     <section className="panel" aria-labelledby="workspace-title">
       <div className="panel-title-bar">
@@ -33,10 +36,9 @@ export const RequestWorkspace: React.FC<RequestWorkspaceProps> = ({
         <span className="panel-subtitle">In-Memory Local Analysis</span>
       </div>
 
-      {/* Quick Sample Selector */}
-      <div className="sample-bar">
-        <span className="sample-bar-label">Try a sample (1-Click Demo for Judges):</span>
-        <div className="sample-chips" role="group" aria-label="Sample fee requests">
+      {/* Unified Entry Strip: One prominent Routine action, nearby samples, and Use My Own Message */}
+      <div className="entry-mode-strip" role="toolbar" aria-label="Demo samples and personal message entry">
+        <div className="sample-actions-group">
           <button
             type="button"
             className={`sample-chip sample-chip-featured ${activeSampleId === 'sample-ordinary-reminder' ? 'active' : ''}`}
@@ -65,13 +67,29 @@ export const RequestWorkspace: React.FC<RequestWorkspaceProps> = ({
             {SAMPLE_REQUESTS[2].name}
           </button>
         </div>
+
+        <div className="personal-action-group">
+          <button
+            type="button"
+            className={`btn-use-own-message ${isPersonalMode ? 'active' : ''}`}
+            onClick={onUseOwnMessage}
+            id="btn-use-own-message"
+            title="Inspect your own fee request with real university verification"
+          >
+            Use my own message ✍️
+          </button>
+        </div>
       </div>
 
       {/* College Selector */}
       <div className="form-group">
         <label htmlFor="college-select" className="form-label">
           <span>Target Institution</span>
-          <span className="form-label-hint">Determines trusted verification route</span>
+          <span className="form-label-hint">
+            {isPersonalMode
+              ? 'Select your college or choose "My college is not listed"'
+              : 'Determines trusted verification route'}
+          </span>
         </label>
         <select
           id="college-select"
@@ -79,12 +97,18 @@ export const RequestWorkspace: React.FC<RequestWorkspaceProps> = ({
           value={selectedCollegeId}
           onChange={(e) => onCollegeChange(e.target.value)}
         >
-          {Object.values(COLLEGES).map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
+          <option value="iit_delhi">Indian Institute of Technology Delhi (IIT Delhi)</option>
+          <option value="uc_berkeley">University of California, Berkeley</option>
+          <option value="unsupported">My college is not listed / Other institution</option>
+          <option value="northwood">
+            Northwood Institute of Technology (Fictional Demo — Sample Flow Only)
+          </option>
         </select>
+        {isPersonalMode && selectedCollegeId === 'northwood' && (
+          <div style={{ fontSize: '11.5px', color: 'var(--amber-dim, #B25E00)', marginTop: '4px' }}>
+            ⚠️ Northwood is a fictional simulation for demo samples. Select your real college or choose &quot;My college is not listed&quot; for authentic verification.
+          </div>
+        )}
       </div>
 
       {/* Text Area for Message */}

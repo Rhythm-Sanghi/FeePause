@@ -18,7 +18,7 @@ test.describe('FeePause End-to-End Application Suite', () => {
     await expect(textarea).toHaveValue(/URGENT NOTICE: NORTHWOOD STUDENT ACCOUNTS OFFICE/);
     await expect(page.getByText('Extracted Text Observations')).toBeVisible();
     await expect(
-      page.locator('.observation-rows').getByText('Specific fee amount claimed: $385.00').first()
+      page.locator('.observation-rows').getByText(/Fee payment requested: \$385\.00|Amount mentioned: \$385\.00/).first()
     ).toBeVisible();
 
     // 4. Evidence Inspector displays details of selected observation
@@ -69,7 +69,7 @@ test.describe('FeePause End-to-End Application Suite', () => {
     const textarea = page.locator('#message-textarea');
     await expect(textarea).toHaveValue(/Northwood Campus Library Services/);
     await expect(
-      page.locator('.observation-rows').getByText('Specific fee amount claimed: $42.50').first()
+      page.locator('.observation-rows').getByText(/Amount mentioned: \$42\.50|Fee payment requested: \$42\.50/).first()
     ).toBeVisible();
 
     // 3. Open Demo Ledger
@@ -100,16 +100,20 @@ test.describe('FeePause End-to-End Application Suite', () => {
     await expect(modal).not.toBeVisible();
   });
 
-  test('Top Quick Start bar provides instant 1-click access to routine reminder (Mobile & Desktop)', async ({ page }) => {
+  test('Single visible action bar provides prominent 1-click access to routine reminder (Mobile & Desktop)', async ({ page }) => {
     await page.goto('/');
 
-    // Verify top quick start bar is visible without scrolling
-    const topRoutineBtn = page.locator('#btn-quick-routine-top');
-    await expect(topRoutineBtn).toBeVisible();
-    await expect(topRoutineBtn).toHaveText(/Try the routine reminder/i);
+    // Verify routine reminder button is visible in the unified entry strip
+    const routineBtn = page.locator('#btn-sample-ordinary-reminder');
+    await expect(routineBtn).toBeVisible();
+    await expect(routineBtn).toHaveText(/Try the routine reminder/i);
 
-    // Click it to load routine sample
-    await topRoutineBtn.click();
+    // Verify "Use my own message" is visible right beside the sample actions
+    const ownMessageBtn = page.locator('#btn-use-own-message');
+    await expect(ownMessageBtn).toBeVisible();
+
+    // Click routine reminder to load sample
+    await routineBtn.click();
 
     const textarea = page.locator('#message-textarea');
     await expect(textarea).toHaveValue(/Northwood Campus Library Services/);
@@ -121,12 +125,61 @@ test.describe('FeePause End-to-End Application Suite', () => {
     await expect(openPortalBtn).toHaveText(/Open demo ledger/i);
   });
 
+  test('Personal-message entry point preserves typed text and switches away from fictional Northwood', async ({ page }) => {
+    await page.goto('/');
+
+    const textarea = page.locator('#message-textarea');
+    await textarea.fill('Personal tuition notice: Please pay $200.00 by Friday.');
+
+    // Click "Use my own message"
+    const ownMessageBtn = page.locator('#btn-use-own-message');
+    await ownMessageBtn.click();
+
+    // 1. Typed text is strictly preserved
+    await expect(textarea).toHaveValue('Personal tuition notice: Please pay $200.00 by Friday.');
+
+    // 2. Fictional Northwood is switched away (defaulting to unlisted or user choice)
+    const collegeSelect = page.locator('#college-select');
+    await expect(collegeSelect).not.toHaveValue('northwood');
+
+    // 3. College select received focus
+    await expect(collegeSelect).toBeFocused();
+
+    // 4. Select UC Berkeley and check request
+    await collegeSelect.selectOption('uc_berkeley');
+    await page.locator('#btn-check-request').click();
+
+    // 5. Verification banner provides official real portal action, not demo ledger
+    const banner = page.locator('.verification-banner');
+    await expect(banner.locator('#btn-open-real-portal')).toBeVisible();
+    await expect(banner.locator('#btn-open-mock-portal')).not.toBeVisible();
+  });
+
+  test('Real-college verification checklist displays 3 steps and independent next steps', async ({ page }) => {
+    await page.goto('/');
+
+    await page.locator('#college-select').selectOption('uc_berkeley');
+    const banner = page.locator('.verification-banner');
+
+    // 3-step checklist
+    const checklist = banner.locator('[data-testid="verification-checklist"]');
+    await expect(checklist).toBeVisible();
+    await expect(checklist.getByText('1. Check the fee description or line item:')).toBeVisible();
+    await expect(checklist.getByText('2. Check the amount:')).toBeVisible();
+    await expect(checklist.getByText('3. Check the academic term or due date:')).toBeVisible();
+
+    // Next steps
+    await expect(checklist.getByText('If details agree')).toBeVisible();
+    await expect(checklist.getByText('If details differ or charge is missing')).toBeVisible();
+    await expect(checklist.getByText('The original message and its sender-supplied destinations remain unverified in either case')).toBeVisible();
+  });
+
   test('Fictional Northwood college exposes no external guidance link and labels data as fictional demo data', async ({
     page
   }) => {
     await page.goto('/');
 
-    // Select Northwood (default)
+    // Select Northwood (default for sample)
     const banner = page.locator('.verification-banner');
     await expect(banner.locator('.verification-route-name')).toHaveText(
       'Northwood Student Accounts Self-Service (Demo Ledger)'
@@ -266,14 +319,19 @@ test.describe('FeePause End-to-End Application Suite', () => {
     await expect(iitPortalBtn).toHaveAttribute('href', 'https://ecampus.iitd.ac.in/scorner/login');
     await expect(iitPortalBtn.locator('.portal-hostname-badge')).toHaveText('ecampus.iitd.ac.in');
 
-    // Secondary guidance link
+    // Secondary guidance link to specific circular
     const iitGuidanceLink = iitBanner.locator('.guidance-link');
     await expect(iitGuidanceLink).toBeVisible();
-    await expect(iitGuidanceLink).toHaveAttribute('href', 'https://academics.iitd.ac.in/circulars/');
-    await expect(iitBanner.getByText('IIT Delhi Academic Circulars')).toBeVisible();
+    await expect(iitGuidanceLink).toHaveAttribute(
+      'href',
+      /academics\.iitd\.ac\.in.*FEE-CIRCULAR-FOR-CONTINUING-STUDENTS/
+    );
+    await expect(iitBanner.getByText('IIT Delhi 2026–27 First-Semester Fee Circular')).toBeVisible();
 
-    // "Canonical Domain" label is removed
-    await expect(iitBanner.getByText('Canonical Domain:')).not.toBeVisible();
+    // Description is accurately narrowed
+    await expect(
+      iitBanner.getByText('IIT Delhi’s 2026–27 first-semester circular directs continuing students to eCampus Student Corner for the semester fees covered by that circular.')
+    ).toBeVisible();
 
     // 2. Select UC Berkeley
     await page.locator('#college-select').selectOption('uc_berkeley');
@@ -291,7 +349,6 @@ test.describe('FeePause End-to-End Application Suite', () => {
       'https://studentcentral.berkeley.edu/billing-fees-payments/billing/'
     );
     await expect(berkeleyBanner.getByText('View Transactions').first()).toBeVisible();
-    await expect(berkeleyBanner.getByText('Canonical Domain:')).not.toBeVisible();
   });
 
   test('Comprehensive privacy audit: zero marker leaks across requests, URLs, storage, console, and inert links', async ({
@@ -327,7 +384,7 @@ test.describe('FeePause End-to-End Application Suite', () => {
     await page.locator('#btn-check-request').click();
 
     // Verify observation extracted without error
-    await expect(page.locator('.observation-rows').getByText('Specific fee amount claimed: $150.00')).toBeVisible();
+    await expect(page.locator('.observation-rows').getByText('$150.00').first()).toBeVisible();
 
     // 1. Verify Browser URL does not leak the marker
     expect(page.url()).not.toContain(uniqueSyntheticSecret);
@@ -386,14 +443,14 @@ test.describe('FeePause End-to-End Application Suite', () => {
     await textarea.fill('Library fee balance: $25.00 due by Friday.');
     await page.locator('#btn-check-request').click();
 
-    await expect(page.locator('.observation-rows').getByText('Specific fee amount claimed: $25.00')).toBeVisible();
+    await expect(page.locator('.observation-rows').getByText('Amount mentioned: $25.00')).toBeVisible();
     await expect(page.locator('.observation-rows').getByText('Stated deadline: "due by Friday"')).toBeVisible();
 
     // Edit message: change amount to $90.00 and add OTP request
     await textarea.fill('Urgent: please pay $90.00 and submit payment OTP immediately.');
     await page.locator('#btn-check-request').click();
 
-    await expect(page.locator('.observation-rows').getByText('Specific fee amount claimed: $90.00')).toBeVisible();
+    await expect(page.locator('.observation-rows').getByText('Fee payment requested: $90.00')).toBeVisible();
     await expect(page.locator('.observation-rows').getByText(/Request for OTP/i)).toBeVisible();
   });
 
@@ -408,13 +465,13 @@ test.describe('FeePause End-to-End Application Suite', () => {
     // Verification banner updates to manual protocol
     const banner = page.locator('.verification-banner');
     await expect(banner).toHaveClass(/unsupported-banner/);
-    await expect(banner.getByText('Verify Directly with Unsupported College')).toBeVisible();
+    await expect(banner.getByText('Verify Directly with Unlisted College')).toBeVisible();
     await expect(
-      banner.getByText('FeePause does not maintain a pre-verified directory route for unlisted institutions')
+      banner.getByText('FeePause does not pre-register this institution')
     ).toBeVisible();
-    await expect(
-      banner.getByText('Open your college student portal using an existing trusted bookmark')
-    ).toBeVisible();
+
+    // Checklist is displayed
+    await expect(banner.locator('[data-testid="verification-checklist"]')).toBeVisible();
 
     // No false verified badges or placeholder sources
     await expect(banner.getByText('Verified Source:')).not.toBeVisible();

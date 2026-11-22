@@ -32,13 +32,15 @@ describe('Verification Destination & Routing Invariants', () => {
     expect(iitDelhi.isSupported).toBe(true);
     expect(iitDelhi.portalUrl).toBe('https://ecampus.iitd.ac.in/scorner/login');
     expect(iitDelhi.portalHostname).toBe('ecampus.iitd.ac.in');
-    expect(iitDelhi.guidanceUrl).toBe('https://academics.iitd.ac.in/circulars/');
-    expect(iitDelhi.sourceLabel).toContain('IIT Delhi Academic Circulars');
+    expect(iitDelhi.guidanceUrl).toContain('academics.iitd.ac.in');
+    expect(iitDelhi.sourceLabel).toContain('IIT Delhi');
+    expect(iitDelhi.sourceLabel).toContain('First-Semester Fee Circular');
     expect(iitDelhi.routeTitle).toContain('scorner');
     expect(iitDelhi.verificationSteps.some((s) => s.includes('ecampus.iitd.ac.in/scorner/login'))).toBe(true);
     // Explicitly verify unsupported eAcademics and SBI Collect guidance are NOT present
     expect(iitDelhi.routeDescription).not.toContain('eAcademics');
     expect(iitDelhi.routeDescription).not.toContain('SBI Collect');
+    expect(iitDelhi.routeDescription).toContain('IIT Delhi’s 2026–27 first-semester circular directs continuing students to eCampus Student Corner for the semester fees covered by that circular.');
     expect(iitDelhi.lastCheckedDate).toBe('2026-11-22');
     expect(iitDelhi.verificationSteps.length).toBeGreaterThan(2);
 
