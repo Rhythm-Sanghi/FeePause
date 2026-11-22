@@ -7,6 +7,7 @@ interface ObservationListProps {
   onSelectObservation: (obs: Observation) => void;
   isLowInformation: boolean;
   hasChecked: boolean;
+  isStale?: boolean;
 }
 
 export const ObservationList: React.FC<ObservationListProps> = ({
@@ -14,8 +15,22 @@ export const ObservationList: React.FC<ObservationListProps> = ({
   selectedObservationId,
   onSelectObservation,
   isLowInformation,
-  hasChecked
+  hasChecked,
+  isStale = false
 }) => {
+  if (isStale) {
+    return (
+      <div className="empty-state stale-state" role="status" aria-live="polite">
+        <div className="empty-state-title" style={{ color: 'var(--warning-ink)' }}>
+          Message changed. Check again.
+        </div>
+        <div>
+          The input text was modified after the last inspection. Click <strong>Check request</strong> to update observations and evidence. The college verification route above remains available.
+        </div>
+      </div>
+    );
+  }
+
   if (!hasChecked) {
     return (
       <div className="empty-state">
@@ -51,7 +66,7 @@ export const ObservationList: React.FC<ObservationListProps> = ({
         </span>
       </div>
 
-      <div className="observation-rows" role="list">
+      <div className="observation-rows" role="group" aria-label="Observations list">
         {observations.map((obs) => {
           const isSelected = selectedObservationId === obs.id;
           let pillClass = 'obs-pill-contact';
@@ -62,10 +77,10 @@ export const ObservationList: React.FC<ObservationListProps> = ({
             pillLabel = 'Payment Claim';
           } else if (obs.category === 'urgency') {
             pillClass = 'obs-pill-urgency';
-            pillLabel = 'Urgent Deadline';
+            pillLabel = 'Stated Deadline';
           } else if (obs.category === 'unverified_link') {
             pillClass = 'obs-pill-link';
-            pillLabel = 'Unverified Link';
+            pillLabel = 'Link / Route';
           } else if (obs.category === 'sanction_threat') {
             pillClass = 'obs-pill-sanction';
             pillLabel = 'Threatened Hold';
@@ -75,26 +90,19 @@ export const ObservationList: React.FC<ObservationListProps> = ({
           }
 
           return (
-            <div
+            <button
+              type="button"
               key={obs.id}
-              role="listitem"
-              tabIndex={0}
               className={`observation-row ${isSelected ? 'selected' : ''}`}
               onClick={() => onSelectObservation(obs)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  onSelectObservation(obs);
-                }
-              }}
-              aria-selected={isSelected}
+              aria-pressed={isSelected}
             >
               <div className="observation-header">
                 <span className={`obs-pill ${pillClass}`}>{pillLabel}</span>
                 <span className="obs-excerpt-preview">{obs.excerpt}</span>
               </div>
               <div className="obs-label">{obs.label}</div>
-            </div>
+            </button>
           );
         })}
       </div>

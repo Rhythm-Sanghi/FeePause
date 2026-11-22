@@ -25,9 +25,11 @@ export interface CollegeRecord {
   isSupported: boolean;
   routeTitle: string;
   routeDescription: string;
-  sourceLabel: string;
-  sourceUrl: string;
-  lastCheckedDate: string;
+  portalUrl?: string;
+  portalHostname?: string;
+  guidanceUrl?: string;
+  sourceLabel?: string;
+  lastCheckedDate?: string;
   verificationSteps: string[];
 }
 

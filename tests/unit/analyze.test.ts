@@ -18,33 +18,68 @@ describe('Deterministic Observation Engine (analyzeRequestText)', () => {
     expect(paymentObs[0].whatIsUnverified).toContain('institutional student balance');
   });
 
-  it('correctly extracts urgency and deadline markers', () => {
-    const text = 'Your account will be suspended within 3 hours unless resolved by 5:00 pm.';
+  it('correctly extracts Indian-grouped amounts without dropping leading digits', () => {
+    const text = 'Please pay ₹1,25,000 for semester tuition dues immediately.';
     const result = analyzeRequestText(text, northwood);
 
-    expect(result.extractedDeadlines.some((d) => d.toLowerCase().includes('within 3 hours'))).toBe(true);
-    const urgencyObs = result.observations.filter((o) => o.category === 'urgency');
-    expect(urgencyObs.length).toBeGreaterThan(0);
+    expect(result.extractedAmounts).toContain('₹1,25,000');
+    expect(result.extractedAmounts).not.toContain('₹1');
+    const paymentObs = result.observations.find((o) => o.category === 'payment');
+    expect(paymentObs).toBeDefined();
+    expect(paymentObs?.excerpt).toBe('₹1,25,000');
   });
 
-  it('extracts unverified external payment links without making them destinations', () => {
-    const text = 'Clear your account here: https://northwood-clearance.invalid/pay';
-    const result = analyzeRequestText(text, northwood);
+  it('handles Western grouping, plain numbers, and currency variations', () => {
+    const textWestern = 'Amount assessed: $1,250,000 for building fee.';
+    const resultWestern = analyzeRequestText(textWestern, northwood);
+    expect(resultWestern.extractedAmounts).toContain('$1,250,000');
 
-    expect(result.extractedDestinations).toContain('https://northwood-clearance.invalid/pay');
-    const linkObs = result.observations.find((o) => o.category === 'unverified_link');
-    expect(linkObs).toBeDefined();
-    expect(linkObs?.excerpt).toBe('https://northwood-clearance.invalid/pay');
-    expect(linkObs?.plainExplanation).toContain('isolates pasted links');
+    const textPlain = 'Pay ₹500 directly or 500 dollars.';
+    const resultPlain = analyzeRequestText(textPlain, northwood);
+    expect(resultPlain.extractedAmounts).toContain('₹500');
+    expect(resultPlain.extractedAmounts.some((a) => a.includes('500 dollars'))).toBe(true);
   });
 
-  it('extracts credential / OTP demands', () => {
-    const text = 'Submit the 6-digit payment confirmation OTP and transaction reference to the desk.';
-    const result = analyzeRequestText(text, northwood);
+  it('correctly extracts urgency and deadline markers, distinguishing panic from stated deadlines', () => {
+    const textPanic = 'Your account will be suspended within 3 hours unless resolved.';
+    const resultPanic = analyzeRequestText(textPanic, northwood);
+    expect(resultPanic.extractedDeadlines.some((d) => d.toLowerCase().includes('within 3 hours'))).toBe(true);
+    const urgencyObs = resultPanic.observations.find((o) => o.category === 'urgency');
+    expect(urgencyObs?.label).toContain('Artificial urgency or short deadline');
 
-    const credObs = result.observations.filter((o) => o.category === 'credential_otp');
-    expect(credObs.length).toBeGreaterThan(0);
-    expect(credObs.some((c) => c.excerpt.toLowerCase().includes('otp'))).toBe(true);
+    const textRoutine = 'The assessment is Due by Friday at 5:00 pm.';
+    const resultRoutine = analyzeRequestText(textRoutine, northwood);
+    const routineObs = resultRoutine.observations.find((o) => o.category === 'urgency');
+    expect(routineObs?.label).toContain('Stated deadline');
+    expect(routineObs?.label).not.toContain('Artificial urgency');
+  });
+
+  it('extracts unverified external payment links vs neutral links', () => {
+    const paymentText = 'Clear your account here: https://northwood-clearance.invalid/pay';
+    const paymentResult = analyzeRequestText(paymentText, northwood);
+    expect(paymentResult.extractedDestinations).toContain('https://northwood-clearance.invalid/pay');
+    const paymentLinkObs = paymentResult.observations.find((o) => o.category === 'unverified_link');
+    expect(paymentLinkObs?.label).toContain('Unverified payment or clearance link');
+
+    const neutralText = 'Read the campus schedule at https://library.example.invalid/hours for details.';
+    const neutralResult = analyzeRequestText(neutralText, northwood);
+    expect(neutralResult.extractedDestinations).toContain('https://library.example.invalid/hours');
+    const neutralLinkObs = neutralResult.observations.find((o) => o.category === 'unverified_link');
+    expect(neutralLinkObs?.label).toContain('Link found in message');
+  });
+
+  it('distinguishes credential demands from neutral mentions like "Never share your OTP"', () => {
+    const mentionText = 'Security reminder: Never share your OTP or password with anyone.';
+    const mentionResult = analyzeRequestText(mentionText, northwood);
+    const mentionObs = mentionResult.observations.find((o) => o.category === 'credential_otp');
+    expect(mentionObs).toBeDefined();
+    expect(mentionObs?.label).toBe('OTP mentioned');
+
+    const demandText = 'Submit your OTP to verify payment.';
+    const demandResult = analyzeRequestText(demandText, northwood);
+    const demandObs = demandResult.observations.find((o) => o.category === 'credential_otp');
+    expect(demandObs).toBeDefined();
+    expect(demandObs?.label).toContain('Request for OTP');
   });
 
   it('extracts sanction threats (course enrollment freeze)', () => {

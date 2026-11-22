@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   MOCK_STUDENT_PROFILE,
   URGENT_SAMPLE_LEDGER_ITEMS,
@@ -21,12 +21,66 @@ export const SyntheticPortalModal: React.FC<SyntheticPortalModalProps> = ({
   isCustomOrEdited,
   claimedAmount = '$385.00'
 }) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
+
   useEffect(() => {
+    if (isOpen) {
+      // Store the active element that opened the dialog
+      openerRef.current = document.activeElement as HTMLElement | null;
+
+      // Focus the first focusable element inside the modal
+      const timer = setTimeout(() => {
+        const focusable = modalRef.current?.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable && focusable.length > 0) {
+          focusable[0].focus();
+        }
+      }, 30);
+
+      return () => clearTimeout(timer);
+    } else {
+      // Return focus to opener when closed
+      if (openerRef.current && typeof openerRef.current.focus === 'function') {
+        openerRef.current.focus();
+      }
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
         onClose();
+        return;
+      }
+
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusable = modalRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (!focusable || focusable.length === 0) return;
+
+        const firstElement = focusable[0];
+        const lastElement = focusable[focusable.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement.focus();
+          }
+        }
       }
     };
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
@@ -58,7 +112,7 @@ export const SyntheticPortalModal: React.FC<SyntheticPortalModalProps> = ({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="portal-modal">
+      <div className="portal-modal" ref={modalRef}>
         <div className="portal-header">
           <div className="portal-brand">
             <span className="portal-mock-badge">Fictional Demonstration Ledger</span>
@@ -71,6 +125,7 @@ export const SyntheticPortalModal: React.FC<SyntheticPortalModalProps> = ({
             className="btn-close-modal"
             onClick={onClose}
             aria-label="Close demo portal"
+            id="btn-close-demo-portal"
           >
             ✕
           </button>
@@ -203,6 +258,7 @@ export const SyntheticPortalModal: React.FC<SyntheticPortalModalProps> = ({
               type="button"
               className="btn-secondary"
               onClick={onClose}
+              id="btn-return-analysis"
             >
               Return to FeePause Analysis
             </button>

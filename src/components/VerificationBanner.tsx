@@ -13,6 +13,7 @@ export const VerificationBanner: React.FC<VerificationBannerProps> = ({
   extractedDestinations
 }) => {
   const isUnsupported = !college.isSupported;
+  const isRealSupported = college.isSupported && !college.isSynthetic;
 
   return (
     <section
@@ -27,17 +28,36 @@ export const VerificationBanner: React.FC<VerificationBannerProps> = ({
           </h2>
           <span className="verification-route-name">{college.routeTitle}</span>
         </div>
-        {college.isSynthetic && (
-          <button
-            type="button"
-            className="btn-open-portal"
-            onClick={onOpenSyntheticPortal}
-            id="btn-open-mock-portal"
-          >
-            <span>Open Synthetic Portal</span>
-            <span aria-hidden="true">→</span>
-          </button>
-        )}
+
+        <div className="verification-actions">
+          {college.isSynthetic && (
+            <button
+              type="button"
+              className="btn-open-portal"
+              onClick={onOpenSyntheticPortal}
+              id="btn-open-mock-portal"
+            >
+              <span>Open Synthetic Portal</span>
+              <span aria-hidden="true">→</span>
+            </button>
+          )}
+
+          {isRealSupported && college.portalUrl && (
+            <a
+              href={college.portalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-open-portal"
+              id="btn-open-real-portal"
+            >
+              <span>Open official student portal</span>
+              {college.portalHostname && (
+                <span className="portal-hostname-badge">{college.portalHostname}</span>
+              )}
+              <span aria-hidden="true">↗</span>
+            </a>
+          )}
+        </div>
       </div>
 
       <p className="verification-desc">{college.routeDescription}</p>
@@ -53,18 +73,39 @@ export const VerificationBanner: React.FC<VerificationBannerProps> = ({
         </ol>
       </div>
 
-      <div className="verification-source-meta">
-        <span>
-          <strong>Verified Source:</strong> {college.sourceLabel}
-        </span>
-        <span>
-          <strong>Canonical Domain:</strong>{' '}
-          <code style={{ fontFamily: 'var(--font-mono)' }}>{college.sourceUrl}</code>
-        </span>
-        <span>
-          <strong>Route Last Checked:</strong> {college.lastCheckedDate}
-        </span>
-      </div>
+      {college.isSupported && (
+        <div className="verification-source-meta">
+          {college.sourceLabel && (
+            <span>
+              <strong>Verified Source:</strong> {college.sourceLabel}
+            </span>
+          )}
+          {college.guidanceUrl && (
+            <span>
+              <a
+                href={college.guidanceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="guidance-link"
+                style={{ color: 'var(--olive)', textDecoration: 'underline', fontWeight: 500 }}
+              >
+                View university guidance ↗
+              </a>
+            </span>
+          )}
+          {college.lastCheckedDate && (
+            <span>
+              <strong>Route Last Checked:</strong> {college.lastCheckedDate}
+            </span>
+          )}
+        </div>
+      )}
+
+      {isUnsupported && (
+        <div style={{ fontSize: '11.5px', color: 'var(--ink-muted)', fontStyle: 'italic', borderTop: '1px solid var(--border-subtle)', paddingTop: '4px' }}>
+          ℹ️ Unlisted institution: Use your existing bookmark or search manually for your registrar or accounts office without guessing domains.
+        </div>
+      )}
 
       {extractedDestinations.length > 0 && (
         <div style={{ fontSize: '11.5px', color: 'var(--ink-muted)', fontStyle: 'italic', borderTop: '1px solid var(--border-subtle)', paddingTop: '4px' }}>

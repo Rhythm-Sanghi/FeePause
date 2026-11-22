@@ -24,9 +24,11 @@ export function resolveVerificationDestination(
 ): {
   destinationTitle: string;
   destinationDescription: string;
-  sourceLabel: string;
-  sourceUrl: string;
-  lastCheckedDate: string;
+  sourceLabel?: string;
+  guidanceUrl?: string;
+  portalUrl?: string;
+  portalHostname?: string;
+  lastCheckedDate?: string;
   steps: string[];
 } {
   // Safety rule: Never allow messageSuppliedLinks to overwrite or supply the verification destination!
@@ -34,7 +36,9 @@ export function resolveVerificationDestination(
     destinationTitle: college.routeTitle,
     destinationDescription: college.routeDescription,
     sourceLabel: college.sourceLabel,
-    sourceUrl: college.sourceUrl,
+    guidanceUrl: college.guidanceUrl,
+    portalUrl: college.portalUrl,
+    portalHostname: college.portalHostname,
     lastCheckedDate: college.lastCheckedDate,
     steps: college.verificationSteps
   };

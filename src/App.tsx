@@ -16,6 +16,7 @@ export const App: React.FC = () => {
   const [inputText, setInputText] = useState<string>('');
   const [selectedCollegeId, setSelectedCollegeId] = useState<string>('northwood');
   const [hasChecked, setHasChecked] = useState<boolean>(false);
+  const [isStale, setIsStale] = useState<boolean>(false);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [selectedObservationId, setSelectedObservationId] = useState<string | null>(null);
   const [activeSampleId, setActiveSampleId] = useState<string | null>(null);
@@ -23,10 +24,10 @@ export const App: React.FC = () => {
 
   // Only unchanged built-in samples can show a matching or no-matching fictional ledger result
   const isUnchangedSample = useMemo(() => {
-    if (!activeSampleId) return false;
+    if (!activeSampleId || isStale) return false;
     const sample = SAMPLE_REQUESTS.find((s) => s.id === activeSampleId);
     return sample ? sample.body === inputText : false;
-  }, [activeSampleId, inputText]);
+  }, [activeSampleId, inputText, isStale]);
 
   const isCustomOrEdited = !isUnchangedSample;
 
@@ -38,6 +39,7 @@ export const App: React.FC = () => {
     const result = analyzeRequestText(inputText, currentCollege);
     setAnalysis(result);
     setHasChecked(true);
+    setIsStale(false);
 
     if (result.observations.length > 0) {
       setSelectedObservationId(result.observations[0].id);
@@ -50,6 +52,7 @@ export const App: React.FC = () => {
     setInputText(sample.body);
     setSelectedCollegeId(sample.collegeId);
     setActiveSampleId(sample.id);
+    setIsStale(false);
 
     const college = COLLEGES[sample.collegeId] || COLLEGES.unsupported;
     const result = analyzeRequestText(sample.body, college);
@@ -66,25 +69,34 @@ export const App: React.FC = () => {
   const handleClear = useCallback(() => {
     setInputText('');
     setHasChecked(false);
+    setIsStale(false);
     setAnalysis(null);
     setSelectedObservationId(null);
     setActiveSampleId(null);
   }, []);
 
-  const handleTextChange = useCallback((newText: string) => {
-    setInputText(newText);
-  }, []);
+  const handleTextChange = useCallback(
+    (newText: string) => {
+      setInputText(newText);
+      if (hasChecked || analysis) {
+        setIsStale(true);
+        setAnalysis(null);
+        setSelectedObservationId(null);
+      }
+    },
+    [hasChecked, analysis]
+  );
 
   const handleCollegeChange = useCallback(
     (newCollegeId: string) => {
       setSelectedCollegeId(newCollegeId);
-      if (hasChecked) {
+      if (hasChecked && !isStale) {
         const nextCollege = COLLEGES[newCollegeId] || COLLEGES.unsupported;
         const result = analyzeRequestText(inputText, nextCollege);
         setAnalysis(result);
       }
     },
-    [hasChecked, inputText]
+    [hasChecked, isStale, inputText]
   );
 
   const selectedObservation = useMemo(() => {
@@ -127,6 +139,7 @@ export const App: React.FC = () => {
             onSelectObservation={(obs: Observation) => setSelectedObservationId(obs.id)}
             isLowInformation={analysis?.isLowInformation || false}
             hasChecked={hasChecked}
+            isStale={isStale}
           />
         </div>
 

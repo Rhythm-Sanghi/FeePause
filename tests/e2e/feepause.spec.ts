@@ -46,8 +46,8 @@ test.describe('FeePause End-to-End Application Suite', () => {
     // Confirm that $385.00 charge does NOT exist in the ledger table
     await expect(page.locator('.ledger-table').getByText('$385.00')).not.toBeVisible();
 
-    // Close Modal via Escape or close button
-    await page.locator('.btn-close-modal').click();
+    // Close Modal via close button
+    await page.locator('#btn-close-demo-portal').click();
     await expect(modal).not.toBeVisible();
   });
 
@@ -86,7 +86,7 @@ test.describe('FeePause End-to-End Application Suite', () => {
     await expect(page.locator('.ledger-table').getByText('Campus Library Materials Assessment')).toBeVisible();
 
     // Close Modal
-    await page.locator('.btn-close-modal').click();
+    await page.locator('#btn-close-demo-portal').click();
     await expect(modal).not.toBeVisible();
   });
 
@@ -123,30 +123,128 @@ test.describe('FeePause End-to-End Application Suite', () => {
 
     await expect(page.getByText('Reminder Status: The incoming reminder itself remains unverified.')).toBeVisible();
 
-    await page.locator('.btn-close-modal').click();
+    await page.locator('#btn-close-demo-portal').click();
+  });
+
+  test('Editing input text shows "Message changed. Check again." and clears stale analysis immediately', async ({
+    page
+  }) => {
+    await page.goto('/');
+
+    // 1. Load urgent sample
+    await page.locator('#btn-sample-urgent-suspicious').click();
+    await expect(page.locator('.observation-rows')).toBeVisible();
+
+    // 2. Type an edit in the textarea
+    const textarea = page.locator('#message-textarea');
+    await textarea.type(' Additional unverified note.');
+
+    // 3. Verify stale notice appears immediately and observations are cleared
+    await expect(page.getByText('Message changed. Check again.')).toBeVisible();
+    await expect(page.locator('.observation-rows')).not.toBeVisible();
+
+    // 4. College verification route remains available during stale state
+    const banner = page.locator('.verification-banner');
+    await expect(banner).toBeVisible();
+    await expect(banner.locator('.verification-route-name')).toHaveText(
+      'Northwood Student Accounts Self-Service (Demo Ledger)'
+    );
+
+    // 5. Click "Check request" to update
+    await page.locator('#btn-check-request').click();
+    await expect(page.getByText('Message changed. Check again.')).not.toBeVisible();
+    await expect(page.locator('.observation-rows')).toBeVisible();
+  });
+
+  test('Keyboard navigation: native buttons, tab traversal, accessible modal focus trap and return focus', async ({
+    page
+  }) => {
+    await page.goto('/');
+
+    // 1. Load urgent sample using keyboard
+    await page.locator('#btn-sample-urgent-suspicious').focus();
+    await page.keyboard.press('Enter');
+
+    // 2. Observations are native buttons with aria-pressed
+    const obsButtons = page.locator('.observation-rows button.observation-row');
+    const count = await obsButtons.count();
+    expect(count).toBeGreaterThan(1);
+
+    // First button is pressed by default
+    await expect(obsButtons.first()).toHaveAttribute('aria-pressed', 'true');
+
+    // Tab or click next observation button
+    await obsButtons.nth(1).focus();
+    await page.keyboard.press('Enter');
+    await expect(obsButtons.nth(1)).toHaveAttribute('aria-pressed', 'true');
+
+    // 3. Focus "Open Synthetic Portal" button and press Enter
+    const openPortalBtn = page.locator('#btn-open-mock-portal');
+    await openPortalBtn.focus();
+    await page.keyboard.press('Enter');
+
+    // 4. Verify modal opens and focus moves inside
+    const modal = page.locator('.portal-modal');
+    await expect(modal).toBeVisible();
+
+    // Focus should be inside modal (e.g. on close button)
+    const closeBtn = page.locator('#btn-close-demo-portal');
+    await expect(closeBtn).toBeFocused();
+
+    // 5. Test Escape key closes modal and returns focus to opener
+    await page.keyboard.press('Escape');
+    await expect(modal).not.toBeVisible();
+
+    // Focus MUST return to the opener button
+    await expect(openPortalBtn).toBeFocused();
+  });
+
+  test('Real college routes: IIT Delhi and UC Berkeley provide official portal and guidance links', async ({
+    page
+  }) => {
+    await page.goto('/');
+
+    // 1. Select IIT Delhi
+    await page.locator('#college-select').selectOption('iit_delhi');
+    const iitBanner = page.locator('.verification-banner');
+
+    // Primary action: Open official student portal
+    const iitPortalBtn = iitBanner.locator('#btn-open-real-portal');
+    await expect(iitPortalBtn).toBeVisible();
+    await expect(iitPortalBtn).toHaveAttribute('href', 'https://ecampus.iitd.ac.in/scorner/login');
+    await expect(iitPortalBtn.locator('.portal-hostname-badge')).toHaveText('ecampus.iitd.ac.in');
+
+    // Secondary guidance link
+    const iitGuidanceLink = iitBanner.locator('.guidance-link');
+    await expect(iitGuidanceLink).toBeVisible();
+    await expect(iitGuidanceLink).toHaveAttribute('href', 'https://academics.iitd.ac.in/circulars/');
+    await expect(iitBanner.getByText('IIT Delhi Academic Circulars')).toBeVisible();
+
+    // "Canonical Domain" label is removed
+    await expect(iitBanner.getByText('Canonical Domain:')).not.toBeVisible();
+
+    // 2. Select UC Berkeley
+    await page.locator('#college-select').selectOption('uc_berkeley');
+    const berkeleyBanner = page.locator('.verification-banner');
+
+    const berkeleyPortalBtn = berkeleyBanner.locator('#btn-open-real-portal');
+    await expect(berkeleyPortalBtn).toBeVisible();
+    await expect(berkeleyPortalBtn).toHaveAttribute('href', 'https://calcentral.berkeley.edu');
+    await expect(berkeleyPortalBtn.locator('.portal-hostname-badge')).toHaveText('calcentral.berkeley.edu');
+
+    const berkeleyGuidanceLink = berkeleyBanner.locator('.guidance-link');
+    await expect(berkeleyGuidanceLink).toBeVisible();
+    await expect(berkeleyGuidanceLink).toHaveAttribute(
+      'href',
+      'https://studentcentral.berkeley.edu/billing-fees-payments/billing/'
+    );
+    await expect(berkeleyBanner.getByText('View Transactions').first()).toBeVisible();
+    await expect(berkeleyBanner.getByText('Canonical Domain:')).not.toBeVisible();
   });
 
   test('Comprehensive privacy audit: zero marker leaks across requests, URLs, storage, console, and inert links', async ({
     page
   }) => {
-    /**
-     * PRIVACY TEST COVERAGE SPECIFICATION:
-     * 1. Unique synthetic marker is placed in the message textarea.
-     * 2. All outgoing network requests (same-origin and external) are intercepted and inspected:
-     *    - URL strings cannot contain the marker.
-     *    - Request post data / bodies cannot contain the marker.
-     *    - ZERO external requests are dispatched.
-     * 3. Browser address bar URL cannot contain the marker (no query parameter or hash leak).
-     * 4. Browser storage boundaries are verified:
-     *    - localStorage contains 0 keys and 0 values with the marker.
-     *    - sessionStorage contains 0 keys and 0 values with the marker.
-     *    - document.cookie contains 0 entries with the marker.
-     * 5. Console logging is monitored:
-     *    - No console.log, console.warn, or console.error outputs contain the marker.
-     * 6. Pasted links remain completely inert:
-     *    - Rendered as plain text / monospace, NOT clickable anchor <a> tags.
-     *    - No prefetch or navigation occurs.
-     */
     const uniqueSyntheticSecret = 'SYNTHETIC-PRIVACY-MARKER-XYZ7729-AUDIT';
     const pastedPhishUrl = 'https://phish-gateway-synthetic.invalid/pay-now';
     const interceptedRequests: { url: string; postData: string | null }[] = [];
@@ -237,7 +335,7 @@ test.describe('FeePause End-to-End Application Suite', () => {
     await page.locator('#btn-check-request').click();
 
     await expect(page.locator('.observation-rows').getByText('Specific fee amount claimed: $25.00')).toBeVisible();
-    await expect(page.locator('.observation-rows').getByText('Short deadline or artificial urgency')).toBeVisible();
+    await expect(page.locator('.observation-rows').getByText('Stated deadline: "due by Friday"')).toBeVisible();
 
     // Edit message: change amount to $90.00 and add OTP request
     await textarea.fill('Urgent: please pay $90.00 and submit payment OTP immediately.');
@@ -247,7 +345,7 @@ test.describe('FeePause End-to-End Application Suite', () => {
     await expect(page.locator('.observation-rows').getByText(/Request for OTP/i)).toBeVisible();
   });
 
-  test('Unsupported college fallback provides safe manual protocol without guessing contacts', async ({
+  test('Unsupported college fallback provides safe manual protocol without guessing contacts or false verified badges', async ({
     page
   }) => {
     await page.goto('/');
@@ -260,11 +358,16 @@ test.describe('FeePause End-to-End Application Suite', () => {
     await expect(banner).toHaveClass(/unsupported-banner/);
     await expect(banner.getByText('Verify Directly with Unsupported College')).toBeVisible();
     await expect(
-      banner.getByText('FeePause does not have a pre-verified directory route for this college')
+      banner.getByText('FeePause does not maintain a pre-verified directory route for unlisted institutions')
     ).toBeVisible();
     await expect(
-      banner.getByText('Open the student portal bookmark you already use for course registration')
+      banner.getByText('Open your college student portal using an existing trusted bookmark')
     ).toBeVisible();
+
+    // No false verified badges or placeholder sources
+    await expect(banner.getByText('Verified Source:')).not.toBeVisible();
+    await expect(banner.getByText('Route Last Checked:')).not.toBeVisible();
+    await expect(banner.getByText('.invalid')).not.toBeVisible();
   });
 
   test('Clearing input resets the workspace and inspector', async ({ page }) => {
@@ -295,7 +398,7 @@ test.describe('FeePause End-to-End Application Suite', () => {
     await expect(banner.locator('.verification-route-name')).toHaveText(
       'Northwood Student Accounts Self-Service (Demo Ledger)'
     );
-    await expect(banner.getByText('https://mock-bursar.northwood.invalid/ledger-guide')).toBeVisible();
+    await expect(banner.locator('a[href*="mock-bursar.northwood.invalid"]')).toBeVisible();
 
     // SafeSpace isolation tag confirms sender-provided links were prevented from supplying destination
     await expect(banner.getByText('SafeSpace Isolation')).toBeVisible();

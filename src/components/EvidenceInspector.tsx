@@ -51,6 +51,7 @@ export const EvidenceInspector: React.FC<EvidenceInspectorProps> = ({
               <div style={{ paddingTop: 'var(--space-1)' }}>
                 <button
                   type="button"
+                  id="inspector-open-mock-portal"
                   className="btn-open-portal"
                   style={{ width: '100%', justifyContent: 'center' }}
                   onClick={onOpenSyntheticPortal}
