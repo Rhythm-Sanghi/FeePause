@@ -14,8 +14,17 @@ describe('Verification Destination & Routing Invariants', () => {
 
     // Ensure the resolved destination matches the college registry and contains NONE of the attacker's links
     expect(destination.destinationTitle).toBe(college.routeTitle);
-    expect(destination.guidanceUrl).toBe(college.guidanceUrl);
+    expect(destination.guidanceUrl).toBeUndefined();
     expect(destination.destinationDescription).not.toContain('attacker-phishing-bursar.invalid');
+  });
+
+  it('fictional Northwood exposes no external guidance link and labels data as fictional demo data', () => {
+    const northwood = COLLEGES.northwood;
+    expect(northwood.isSynthetic).toBe(true);
+    expect(northwood.guidanceUrl).toBeUndefined();
+    expect(northwood.sourceLabel).toBe('Fictional demo data');
+    expect(northwood.lastCheckedDate).toBeUndefined();
+    expect(northwood.routeDescription).toContain('officially simulated');
   });
 
   it('provides verified real college records with separate portal and guidance URLs', () => {

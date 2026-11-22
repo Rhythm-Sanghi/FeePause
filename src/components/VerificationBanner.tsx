@@ -37,7 +37,7 @@ export const VerificationBanner: React.FC<VerificationBannerProps> = ({
               onClick={onOpenSyntheticPortal}
               id="btn-open-mock-portal"
             >
-              <span>Open Synthetic Portal</span>
+              <span>Open demo ledger</span>
               <span aria-hidden="true">→</span>
             </button>
           )}
@@ -73,7 +73,15 @@ export const VerificationBanner: React.FC<VerificationBannerProps> = ({
         </ol>
       </div>
 
-      {college.isSupported && (
+      {college.isSynthetic && (
+        <div className="verification-source-meta">
+          <span>
+            <strong>Data Source:</strong> Fictional demo data
+          </span>
+        </div>
+      )}
+
+      {isRealSupported && (
         <div className="verification-source-meta">
           {college.sourceLabel && (
             <span>

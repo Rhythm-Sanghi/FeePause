@@ -3,20 +3,18 @@ import { CollegeRecord } from '../types';
 export const COLLEGES: Record<string, CollegeRecord> = {
   northwood: {
     id: 'northwood',
-    name: 'Northwood Institute of Technology (Demo College)',
+    name: 'Northwood Institute of Technology (Fictional Demo College)',
     shortName: 'Northwood Tech',
     isSynthetic: true,
     isSupported: true,
     routeTitle: 'Northwood Student Accounts Self-Service (Demo Ledger)',
     routeDescription:
       'Fictional Northwood Tech finance portal where student tuition, lab assessments, and term dues are officially simulated.',
-    guidanceUrl: 'https://mock-bursar.northwood.invalid/ledger-guide',
-    sourceLabel: 'Northwood Academic Regulations & Cashier Policy (Demo Baseline)',
-    lastCheckedDate: '2026-11-22',
+    sourceLabel: 'Fictional demo data',
     verificationSteps: [
-      'Open Northwood’s synthetic student portal ledger using the in-app tool below.',
-      'Check whether the specific fee line item and exact amount are listed on your current term statement.',
-      'Confirm that the bursar office lists the fee before taking any payment action.'
+      'Open Northwood’s fictional demo ledger using the in-app tool below.',
+      'Check whether the specific fee line item and exact amount are listed on the demo statement.',
+      'Confirm with the student accounts office before taking any payment action.'
     ]
   },
   iit_delhi: {

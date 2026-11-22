@@ -37,18 +37,33 @@ export const RequestWorkspace: React.FC<RequestWorkspaceProps> = ({
       <div className="sample-bar">
         <span className="sample-bar-label">Try a sample (1-Click Demo for Judges):</span>
         <div className="sample-chips" role="group" aria-label="Sample fee requests">
-          {SAMPLE_REQUESTS.map((sample) => (
-            <button
-              key={sample.id}
-              type="button"
-              className={`sample-chip ${activeSampleId === sample.id ? 'active' : ''}`}
-              onClick={() => onSelectSample(sample)}
-              title={sample.tagline}
-              id={`btn-${sample.id}`}
-            >
-              {sample.name}
-            </button>
-          ))}
+          <button
+            type="button"
+            className={`sample-chip sample-chip-featured ${activeSampleId === 'sample-ordinary-reminder' ? 'active' : ''}`}
+            onClick={() => onSelectSample(SAMPLE_REQUESTS[1])}
+            title={SAMPLE_REQUESTS[1].tagline}
+            id="btn-sample-ordinary-reminder"
+          >
+            ★ Try the routine reminder (Recommended)
+          </button>
+          <button
+            type="button"
+            className={`sample-chip ${activeSampleId === 'sample-urgent-suspicious' ? 'active' : ''}`}
+            onClick={() => onSelectSample(SAMPLE_REQUESTS[0])}
+            title={SAMPLE_REQUESTS[0].tagline}
+            id="btn-sample-urgent-suspicious"
+          >
+            {SAMPLE_REQUESTS[0].name}
+          </button>
+          <button
+            type="button"
+            className={`sample-chip ${activeSampleId === 'sample-unsupported-college' ? 'active' : ''}`}
+            onClick={() => onSelectSample(SAMPLE_REQUESTS[2])}
+            title={SAMPLE_REQUESTS[2].tagline}
+            id="btn-sample-unsupported-college"
+          >
+            {SAMPLE_REQUESTS[2].name}
+          </button>
         </div>
       </div>
 

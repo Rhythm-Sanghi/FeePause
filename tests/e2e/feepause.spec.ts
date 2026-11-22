@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('FeePause End-to-End Application Suite', () => {
-  test('Urgent sample opens fictional demo ledger with no corresponding charge', async ({ page }) => {
+  test('Urgent sample opens fictional demo ledger with no corresponding charge in three compact rows', async ({ page }) => {
     await page.goto('/');
 
     // 1. Initial page load check
@@ -27,9 +27,10 @@ test.describe('FeePause End-to-End Application Suite', () => {
     await expect(inspector.locator('.inspector-excerpt-box')).toHaveText('$385.00');
     await expect(inspector.getByText('What Remains Unverified:')).toBeVisible();
 
-    // 5. Open Synthetic Portal
+    // 5. Open Demo Ledger button labeled "Open demo ledger"
     const openPortalBtn = page.locator('#btn-open-mock-portal');
     await expect(openPortalBtn).toBeVisible();
+    await expect(openPortalBtn).toHaveText(/Open demo ledger/i);
     await openPortalBtn.click();
 
     // 6. Verify modal is visible and labeled as fictional
@@ -38,9 +39,13 @@ test.describe('FeePause End-to-End Application Suite', () => {
     await expect(page.getByText('Fictional Demonstration Ledger')).toBeVisible();
     await expect(page.getByRole('heading', { name: /Northwood Tech — Student Accounts Self-Service/i })).toBeVisible();
 
-    // 7. Verify REQUIRED EXACT PHRASES for urgent sample
+    // 7. Verify THREE COMPACT ROWS for urgent sample
     await expect(page.locator('[data-testid="portal-finding-urgent"]')).toBeVisible();
+    await expect(page.getByText('1. What the message claims')).toBeVisible();
+    await expect(page.getByText('2. What the demo ledger shows')).toBeVisible();
+    await expect(page.getByText('3. What remains unverified')).toBeVisible();
     await expect(page.getByText('No matching charge in this demo ledger')).toBeVisible();
+    await expect(page.getByText('No corresponding charge shown')).toBeVisible();
     await expect(page.getByText('Reminder Status: The incoming reminder itself remains unverified.')).toBeVisible();
 
     // Confirm that $385.00 charge does NOT exist in the ledger table
@@ -51,12 +56,13 @@ test.describe('FeePause End-to-End Application Suite', () => {
     await expect(modal).not.toBeVisible();
   });
 
-  test('Routine reminder sample opens fictional demo ledger with matching charge', async ({ page }) => {
+  test('Routine reminder sample opens fictional demo ledger with matching charge in three compact rows', async ({ page }) => {
     await page.goto('/');
 
-    // 1. Click "Sample 2: Routine Fee Reminder"
+    // 1. Click prominent "Try the routine reminder" button
     const sampleBtn = page.locator('#btn-sample-ordinary-reminder');
     await expect(sampleBtn).toBeVisible();
+    await expect(sampleBtn).toHaveText(/Try the routine reminder/i);
     await sampleBtn.click();
 
     // 2. Observations and text populated
@@ -66,9 +72,10 @@ test.describe('FeePause End-to-End Application Suite', () => {
       page.locator('.observation-rows').getByText('Specific fee amount claimed: $42.50').first()
     ).toBeVisible();
 
-    // 3. Open Synthetic Portal
+    // 3. Open Demo Ledger
     const openPortalBtn = page.locator('#btn-open-mock-portal');
     await expect(openPortalBtn).toBeVisible();
+    await expect(openPortalBtn).toHaveText(/Open demo ledger/i);
     await openPortalBtn.click();
 
     // 4. Verify modal is visible and labeled as fictional
@@ -76,8 +83,11 @@ test.describe('FeePause End-to-End Application Suite', () => {
     await expect(modal).toBeVisible();
     await expect(page.getByText('Fictional Demonstration Ledger')).toBeVisible();
 
-    // 5. Verify REQUIRED EXACT PHRASES for routine sample
+    // 5. Verify THREE COMPACT ROWS for routine sample
     await expect(page.locator('[data-testid="portal-finding-routine"]')).toBeVisible();
+    await expect(page.getByText('1. What the message claims')).toBeVisible();
+    await expect(page.getByText('2. What the demo ledger shows')).toBeVisible();
+    await expect(page.getByText('3. What remains unverified')).toBeVisible();
     await expect(page.getByText('Matching charge in this demo ledger')).toBeVisible();
     await expect(page.getByText('Reminder Status: The incoming reminder itself remains unverified.')).toBeVisible();
 
@@ -88,6 +98,48 @@ test.describe('FeePause End-to-End Application Suite', () => {
     // Close Modal
     await page.locator('#btn-close-demo-portal').click();
     await expect(modal).not.toBeVisible();
+  });
+
+  test('Top Quick Start bar provides instant 1-click access to routine reminder (Mobile & Desktop)', async ({ page }) => {
+    await page.goto('/');
+
+    // Verify top quick start bar is visible without scrolling
+    const topRoutineBtn = page.locator('#btn-quick-routine-top');
+    await expect(topRoutineBtn).toBeVisible();
+    await expect(topRoutineBtn).toHaveText(/Try the routine reminder/i);
+
+    // Click it to load routine sample
+    await topRoutineBtn.click();
+
+    const textarea = page.locator('#message-textarea');
+    await expect(textarea).toHaveValue(/Northwood Campus Library Services/);
+    await expect(page.getByText('Extracted Text Observations')).toBeVisible();
+
+    // Banner is ready with "Open demo ledger"
+    const openPortalBtn = page.locator('#btn-open-mock-portal');
+    await expect(openPortalBtn).toBeVisible();
+    await expect(openPortalBtn).toHaveText(/Open demo ledger/i);
+  });
+
+  test('Fictional Northwood college exposes no external guidance link and labels data as fictional demo data', async ({
+    page
+  }) => {
+    await page.goto('/');
+
+    // Select Northwood (default)
+    const banner = page.locator('.verification-banner');
+    await expect(banner.locator('.verification-route-name')).toHaveText(
+      'Northwood Student Accounts Self-Service (Demo Ledger)'
+    );
+
+    // Must show "Data Source: Fictional demo data"
+    await expect(banner.getByText('Data Source: Fictional demo data')).toBeVisible();
+
+    // Must NOT show external guidance link or misleading verified badges
+    await expect(banner.locator('a[href*="mock-bursar.northwood.invalid"]')).not.toBeVisible();
+    await expect(banner.getByText('Verified Source:')).not.toBeVisible();
+    await expect(banner.getByText('Route Last Checked:')).not.toBeVisible();
+    await expect(banner.getByText('View university guidance')).not.toBeVisible();
   });
 
   test('Custom or edited text does not inherit simulated match result', async ({ page }) => {
@@ -108,7 +160,7 @@ test.describe('FeePause End-to-End Application Suite', () => {
       'Northwood Student Accounts Self-Service (Demo Ledger)'
     );
 
-    // 4. Open Synthetic Portal
+    // 4. Open Demo Ledger
     await page.locator('#btn-open-mock-portal').click();
 
     // 5. Verify explicit "No demo result for this message" state
@@ -178,7 +230,7 @@ test.describe('FeePause End-to-End Application Suite', () => {
     await page.keyboard.press('Enter');
     await expect(obsButtons.nth(1)).toHaveAttribute('aria-pressed', 'true');
 
-    // 3. Focus "Open Synthetic Portal" button and press Enter
+    // 3. Focus "Open demo ledger" button and press Enter
     const openPortalBtn = page.locator('#btn-open-mock-portal');
     await openPortalBtn.focus();
     await page.keyboard.press('Enter');
@@ -187,7 +239,7 @@ test.describe('FeePause End-to-End Application Suite', () => {
     const modal = page.locator('.portal-modal');
     await expect(modal).toBeVisible();
 
-    // Focus should be inside modal (e.g. on close button)
+    // Focus should be inside modal (on close button)
     const closeBtn = page.locator('#btn-close-demo-portal');
     await expect(closeBtn).toBeFocused();
 
@@ -393,12 +445,11 @@ test.describe('FeePause End-to-End Application Suite', () => {
     );
     await page.locator('#btn-check-request').click();
 
-    // The verified route remains the official Northwood demo ledger, not the phishing link
+    // The verified route remains the fictional Northwood demo ledger, not the phishing link
     const banner = page.locator('.verification-banner');
     await expect(banner.locator('.verification-route-name')).toHaveText(
       'Northwood Student Accounts Self-Service (Demo Ledger)'
     );
-    await expect(banner.locator('a[href*="mock-bursar.northwood.invalid"]')).toBeVisible();
 
     // SafeSpace isolation tag confirms sender-provided links were prevented from supplying destination
     await expect(banner.getByText('SafeSpace Isolation')).toBeVisible();

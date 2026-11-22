@@ -56,7 +56,7 @@ export const EvidenceInspector: React.FC<EvidenceInspectorProps> = ({
                   style={{ width: '100%', justifyContent: 'center' }}
                   onClick={onOpenSyntheticPortal}
                 >
-                  Verify in Synthetic Portal →
+                  Verify in Demo Ledger →
                 </button>
               </div>
             )}
