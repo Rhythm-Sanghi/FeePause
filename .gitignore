@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Production build
+dist/
+
+# Test output
+test-results/
+playwright-report/
+blob-report/
+
+# Local handoff materials (Devpost drafts, rehearsal script, evaluation sheet)
+handoff/
+.handoff/
+
+# IDE and OS files
+.DS_Store
+Thumbs.db
+*.log
+
+# Scratch and environment
+.env
+.env.local
+scratch/
